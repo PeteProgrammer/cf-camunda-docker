@@ -1,2 +1,22 @@
-#!/bin/sh
-export DB_URL=jdbc:$DATABASE_URL && /bin/sh -c "$*"
+#!/bin/bash
+
+re="mysql2?://([^:]+):([^@]+)@([^?]+).*"
+if [[ $DATABASE_URL =~ $re ]]; then
+	export DB_USERNAME=${BASH_REMATCH[1]}
+	export DB_PASSWORD=${BASH_REMATCH[2]}
+	export HOST_AND_DB=${BASH_REMATCH[3]}
+	export NAME=${BASH_REMATCH[4]}
+	export DB_URL=jdbc:mysql://$HOST_AND_DB
+	export DB_DRIVER=com.mysql.jdbc.Driver
+	echo "Current environment"
+	env
+	echo "Starting application $*"
+	#/bin/sh -c "$*" 
+	/usr/local/bin/configure-and-run.sh
+	RESULT=$?
+	echo "Exit code: $RESULT"
+	exit $RESULT
+else
+	echo "Unable to parse DATABASE_URL"
+	exit 1
+fi
